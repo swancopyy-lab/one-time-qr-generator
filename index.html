@@ -1,47 +1,61 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <title>توليد الباركودات للضيوف</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; padding: 30px; }
-    textarea { width: 80%; height: 200px; margin-bottom: 20px; font-size: 16px; }
-    button { padding: 12px 25px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; background: black; color: white; }
-    #status { margin-top: 20px; }
-  </style>
+<meta charset="UTF-8">
+<title>تأكيد الحضور</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+  input { padding: 10px; font-size: 16px; }
+  button { padding: 10px 20px; font-size: 16px; margin-left: 10px; }
+  #qrcode { margin-top: 20px; }
+  #message { color:red; }
+</style>
 </head>
 <body>
+<h2>أدخل اسمك لتأكيد الحضور</h2>
+<input type="text" id="guestName" placeholder="اكتب اسمك هنا">
+<button onclick="showQRCode()">اعرض باركودي</button>
 
-  <h2>أدخل أسماء الضيوف (سطر لكل ضيف)</h2>
-  <textarea id="guestNames" placeholder="مثال: حنان&#10;ليلى&#10;أسماء"></textarea><br>
-  <button onclick="sendNames()">توليد الباركودات</button>
-
-  <div id="status"></div>
+<div id="qrcode"></div>
+<p id="message"></p>
 
 <script>
-function sendNames() {
-  const namesText = document.getElementById("guestNames").value.trim();
-  if(!namesText) { alert("اكتب أسماء الضيوف!"); return; }
+const sheetCSVUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRlvqx4jBJwwHpIkWtxwZ_AC6KD7LXbMF9ppCOm1j3UpcRh8EWIcMLvqSoX09oYW2MHkv2Gy079KtS5/pub?output=csv";
+let guests = {};
 
-  const names = namesText.split("\n").map(n => n.trim()).filter(n => n);
-  const statusDiv = document.getElementById("status");
-  statusDiv.innerHTML = "جارٍ توليد الباركودات...";
-
-  names.forEach(name => {
-    // استدعاء Google Script لتوليد الباركود لكل اسم
-    fetch("https://script.google.com/macros/s/AKfycbwI2XtiMwKgM60FCBNBqCMCLfcrK0cg4G17xWNzs5G9O5jxCUdK5ijrpLjFi4PnMMk4HQ/exec?guest=" + encodeURIComponent(name))
-      .then(res => res.text())
-      .then(resText => {
-        statusDiv.innerHTML += `<p>تم توليد الباركود لـ ${name}</p>`;
-      })
-      .catch(err => {
-        statusDiv.innerHTML += `<p style="color:red;">خطأ في توليد الباركود لـ ${name}</p>`;
-      });
+// جلب البيانات من Google Sheet
+fetch(sheetCSVUrl)
+  .then(response => response.text())
+  .then(csvText => {
+    const lines = csvText.trim().split("\n");
+    lines.forEach(line => {
+      const [name, id] = line.split(",");
+      guests[name.trim()] = id.trim();
+    });
   });
+
+// عرض QR Code
+function showQRCode() {
+  const name = document.getElementById("guestName").value.trim();
+  const qrcodeDiv = document.getElementById("qrcode");
+  const msg = document.getElementById("message");
+  qrcodeDiv.innerHTML = "";
+  msg.textContent = "";
+
+  if (guests[name]) {
+    new QRCode(qrcodeDiv, {
+      text: guests[name],
+      width: 200,
+      height: 200
+    });
+  } else {
+    msg.textContent = "ما لقيت اسمك 😅";
+  }
 }
 </script>
-
 </body>
 </html>
+
 
 
