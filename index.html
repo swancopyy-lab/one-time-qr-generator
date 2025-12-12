@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>توليد الباركودات للضيوف</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<style>
+body { font-family: sans-serif; text-align: center; padding: 30px; }
+input, button { padding: 10px; margin: 10px; font-size: 16px; }
+#qrcodes div { margin: 10px; display: inline-block; text-align: center; }
+</style>
+</head>
+<body>
+
+<h2>توليد الباركودات للضيوف</h2>
+<input type="text" id="guestName" placeholder="اسم الضيف">
+<input type="number" id="qrCount" placeholder="عدد الباركودات">
+<button onclick="generate()">توليد</button>
+
+<div id="qrcodes"></div>
+
+<script>
+const webAppUrl = "https://script.google.com/macros/s/AKfycbymZk-B8T0T35IyOMN-Gaq3B2QpsskVv7pM7oKTPKGqlFMQqTj1sBsUWInoA9vkubDeTg/exec"; // ضع رابط Web App
+
+function generate() {
+  const name = document.getElementById('guestName').value.trim();
+  const count = parseInt(document.getElementById('qrCount').value);
+  const container = document.getElementById('qrcodes');
+  container.innerHTML = '';
+
+  if(!name || isNaN(count) || count <= 0){
+    alert('ادخل الاسم وعدد الباركودات بشكل صحيح');
+    return;
+  }
+
+  for(let i=1; i<=count; i++){
+    const id = Date.now() + '_' + i;
+    const link = webAppUrl + "?name=" + encodeURIComponent(name);
+
+    // توليد QR
+    const canvas = document.createElement('canvas');
+    new QRious({ element: canvas, value: link, size: 200 });
+
+    // تحويل QR لصورة DataURL
+    const qrDataUrl = canvas.toDataURL();
+
+    // إرسال إلى Google Sheet
+    fetch(webAppUrl + "?addGuest=true&name=" + encodeURIComponent(name) + "&qrUrl=" + encodeURIComponent(qrDataUrl))
+      .then(res => console.log("Guest added:", name));
+
+    const div = document.createElement('div');
+    div.appendChild(canvas);
+    const label = document.createElement('div');
+    label.innerText = name + " #" + i;
+    div.appendChild(label);
+    container.appendChild(div);
+  }
+}
+</script>
+
+</body>
+</html>
