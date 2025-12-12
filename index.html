@@ -29,7 +29,7 @@ function sendNames() {
 
   names.forEach(name => {
     // استدعاء Google Script لتوليد الباركود لكل اسم
-    fetch("https://script.google.com/macros/s/AKfycbySB6kGg73QFz3YrPblvmKcxshLGNoM9N-7gU08_bFoZezz2IDNhg2I8hU14jgsuiVyHw/exec?guest=" + encodeURIComponent(name))
+    fetch("https://script.google.com/macros/s/AKfycbwerBB5gbHRJr_h8DeSK7urS5WWLWc8_CQRwTRlUjp0oBKrGYHN8IBcs6UpMii8VIggEg/exec?guest=" + encodeURIComponent(name))
       .then(res => res.text())
       .then(resText => {
         statusDiv.innerHTML += `<p>تم توليد الباركود لـ ${name}</p>`;
