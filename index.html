@@ -1,72 +1,47 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>مولد QR حسب كل ضيف</title>
-<style>
-  body { font-family: Arial; text-align:center; padding:20px; }
-  textarea { width:90%; height:150px; font-size:18px; padding:10px; }
-  button { padding:12px 25px; font-size:18px; margin-top:10px; }
-  #qrcodes { display:flex; flex-wrap:wrap; justify-content:center; margin-top:20px; }
-  .qr-item { margin:10px; text-align:center; }
-</style>
+  <meta charset="UTF-8">
+  <title>توليد الباركودات للضيوف</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 30px; }
+    textarea { width: 80%; height: 200px; margin-bottom: 20px; font-size: 16px; }
+    button { padding: 12px 25px; font-size: 18px; cursor: pointer; border-radius: 10px; border: none; background: black; color: white; }
+    #status { margin-top: 20px; }
+  </style>
 </head>
 <body>
 
-<h2>✨ اكتبي أسماء الضيوف (كل اسم بسطر)</h2>
+  <h2>أدخل أسماء الضيوف (سطر لكل ضيف)</h2>
+  <textarea id="guestNames" placeholder="مثال: حنان&#10;ليلى&#10;أسماء"></textarea><br>
+  <button onclick="sendNames()">توليد الباركودات</button>
 
-<textarea id="namesInput" placeholder="مثال:
-حنان
-ليلى
-اسماء
-"></textarea>
-
-<br>
-<button onclick="generateQRs()">توليد الباركودات</button>
-
-<div id="qrcodes"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <div id="status"></div>
 
 <script>
+function sendNames() {
+  const namesText = document.getElementById("guestNames").value.trim();
+  if(!namesText) { alert("اكتب أسماء الضيوف!"); return; }
 
-const webAppUrl = "https://script.google.com/macros/s/AKfycbymZk-B8T0T35IyOMN-Gaq3B2QpsskVv7pM7oKTPKGqlFMQqTj1sBsUWInoA9vkubDeTg/exec";
+  const names = namesText.split("\n").map(n => n.trim()).filter(n => n);
+  const statusDiv = document.getElementById("status");
+  statusDiv.innerHTML = "جارٍ توليد الباركودات...";
 
-function generateQRs(){
-    
-    const rawNames = document.getElementById("namesInput").value.trim();
-    const names = rawNames.split("\n").map(n => n.trim()).filter(n => n !== "");
-
-    const container = document.getElementById("qrcodes");
-    container.innerHTML = "";
-
-    names.forEach((name, index) => {
-
-        // رابط الشخص الواحد
-        const link = `${webAppUrl}?name=${encodeURIComponent(name)}&id=${Date.now()}_${index}`;
-
-        // توليد QR
-        const canvas = document.createElement("canvas");
-        new QRious({
-            element: canvas,
-            value: link,
-            size: 200
-        });
-
-        // عرض النتيجة
-        const div = document.createElement("div");
-        div.className = "qr-item";
-        div.innerHTML = `
-            <p>${name}</p>
-        `;
-        div.appendChild(canvas);
-
-        container.appendChild(div);
-    });
+  names.forEach(name => {
+    // استدعاء Google Script لتوليد الباركود لكل اسم
+    fetch("https://script.google.com/macros/s/AKfycbySB6kGg73QFz3YrPblvmKcxshLGNoM9N-7gU08_bFoZezz2IDNhg2I8hU14jgsuiVyHw/exec?guest=" + encodeURIComponent(name))
+      .then(res => res.text())
+      .then(resText => {
+        statusDiv.innerHTML += `<p>تم توليد الباركود لـ ${name}</p>`;
+      })
+      .catch(err => {
+        statusDiv.innerHTML += `<p style="color:red;">خطأ في توليد الباركود لـ ${name}</p>`;
+      });
+  });
 }
-
 </script>
 
 </body>
 </html>
+
 
